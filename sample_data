@@ -1,0 +1,6 @@
+[!] Scanning 192.168.XXX.XXX for banners...
+------------------------------------------------------------
+[OPEN]  Port   808 | Banner: No banner returned
+[OPEN]  Port   135 | Banner: No banner returned
+[OPEN]  Port   139 | Banner: No banner returned
+[OPEN]  Port   445 | Banner: No banner returned
