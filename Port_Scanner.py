@@ -3,11 +3,8 @@ import argparse
 from concurrent.futures import ThreadPoolExecutor
 
 def grab_banner(s, port):
-    """
-    FIX 1: Sends a probe payload to trigger 'quiet' services.
-    FIX 2: Uses 'errors=ignore' to handle non-text binary banners.
-    """
-    # Define specific probes for common "quiet" services
+    """Send a short probe and return any text banner the service sends back."""
+    # A few services stay silent until they receive a protocol-specific payload.
     probes = {
         80: b"GET / HTTP/1.1\r\nHost: target\r\n\r\n",
         443: b"GET / HTTP/1.1\r\nHost: target\r\n\r\n",
@@ -17,11 +14,11 @@ def grab_banner(s, port):
     }
 
     try:
-        # Send a specific probe if known, otherwise a generic newline to 'nudge' the service
+        # Known ports get a matching probe; every other port gets a newline.
         payload = probes.get(port, b"\r\n")
         s.sendall(payload)
-        
-        # Increased receive buffer and added error handling for encoding
+
+        # Decode the reply as text and skip bytes that are not valid UTF-8.
         banner = s.recv(1024).decode(errors='ignore').strip()
         return banner if banner else "Connected (No text banner)"
     except Exception:
@@ -29,10 +26,9 @@ def grab_banner(s, port):
 
 def scan_port(target, port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        # FIX 3: Increased timeout to account for probe-response delay
-        s.settimeout(2.5) 
+        # Allow time for the service to answer after the probe is sent.
+        s.settimeout(2.5)
         if s.connect_ex((target, port)) == 0:
-            # FIX 4: Pass 'port' so grab_banner knows what payload to send
             banner = grab_banner(s, port)
             print(f"[OPEN]  Port {port:5} | Banner: {banner}")
 
